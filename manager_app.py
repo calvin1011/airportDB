@@ -168,9 +168,23 @@ def employee_add():
 
         # START-STUDENT-CODE
         # 1. Connect to DB
+        cnxn = pyodbc.connect(DSN)
+        cursor = cnxn.cursor()
+
         # 2. Check if this SSN already exists
+        cursor.execute("SELECT 1 FROM employee WHERE ssn = ?", (ssn,))
+        exists = cursor.fetchone()
+
         # 3. If not, insert into employee and handle specialization
+        if not exists:
+            cursor.execute('''
+                INSERT INTO employee (ssn, name, password, address, phone, salary)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (ssn, name, password_hashed, address, phone, salary))
+
         # 4. Close connection
+        cnxn.commit()
+        cnxn.close()
 
         # END-STUDENT-CODE
 
