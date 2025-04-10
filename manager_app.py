@@ -5,7 +5,6 @@ from functools import wraps
 from flask import Flask, session, request, render_template, redirect, url_for
 from password import hash_password
 
-# START-STUDENT-CODE
 # Define the DSN for the ODBC connection to your PostgreSQL database.
 DSN = (
     "DRIVER={PostgreSQL ODBC Driver(UNICODE)};"
@@ -15,7 +14,7 @@ DSN = (
     "UID=C837785579;"
     "PWD=837785579"
 )
-# END-STUDENT-CODE
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
@@ -117,12 +116,10 @@ def login():
         username = request.form['username'].strip()
         password = request.form['password'].strip()
 
-        # START-SAMPLE-SOLUTION
         # 1. Connect to the DB
-        # 2. Select manager based on SSN and retrieve the password
-        # 3. Close the connection
         cnxn = pyodbc.connect(DSN)
         cursor = cnxn.cursor()
+        # 2. Select manager based on SSN and retrieve the password
         cursor.execute('''
             SELECT e.password
             FROM employee e
@@ -130,8 +127,9 @@ def login():
             WHERE e.ssn = ?
         ''', (username,))
         user = cursor.fetchone()
+        # 3. Close the connection
         cnxn.close()
-        # END-SAMPLE-SOLUTION
+
 
         if user and verify_password(password, user[0]):
             session['username'] = username
@@ -166,7 +164,6 @@ def employee_add():
         salary = parse_float(salary)
         password_hashed = hash_password(password) if password else None
 
-        # START-STUDENT-CODE
         # 1. Connect to DB
         cnxn = pyodbc.connect(DSN)
         cursor = cnxn.cursor()
@@ -186,7 +183,6 @@ def employee_add():
         cnxn.commit()
         cnxn.close()
 
-        # END-STUDENT-CODE
 
         return redirect(url_for('employee_add'))
 
@@ -210,7 +206,6 @@ def employee_update():
         salary = parse_float(salary)
         password_hashed = hash_password(password) if password else None
 
-        # START-STUDENT-CODE
         # 1. Connect to DB
         cnxn = pyodbc.connect(DSN)
         cursor = cnxn.cursor()
@@ -245,10 +240,6 @@ def employee_update():
                 cnxn.commit()
         # 5. Close connection
         cnxn.close()
-        # END-STUDENT-CODE
-
-
-
 
         return redirect(url_for('employee_update'))
 
