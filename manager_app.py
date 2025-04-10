@@ -212,12 +212,43 @@ def employee_update():
 
         # START-STUDENT-CODE
         # 1. Connect to DB
-        # 2. Check if employee with SSN exists
-        # 3. If exists, update non-empty fields
-        # 4. Handle specialization
-        # 5. Close connection
+        cnxn = pyodbc.connect(DSN)
+        cursor = cnxn.cursor()
 
+        # 2. Check if employee with SSN exists
+        cursor.execute("SELECT 1 FROM employee WHERE ssn = ?", (ssn))
+        if cursor.fetchone():
+            #Build update query
+            fields = []
+            values = []
+
+            if name:
+                fields.append("name = ?")
+                values.append(name)
+            if password_hashed:
+                fields.append("password = ?")
+                values.append(password_hashed)
+            if address:
+                fields.append("address = ?")
+                values.append(address)
+            if phone:
+                fields.append("phone = ?")
+                values.append(phone)
+            if salary:
+                fields.append("salary = ?")
+                values.append(salary)
+
+            if fields:
+                update_query = f"UPDATE employee SET {', '.join(fields)} WHERE ssn = ?"
+                values.append(ssn)
+                cursor.execute(update_query, values)
+                cnxn.commit()
+        # 5. Close connection
+        cnxn.close()
         # END-STUDENT-CODE
+
+
+
 
         return redirect(url_for('employee_update'))
 
