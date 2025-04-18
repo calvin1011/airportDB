@@ -413,12 +413,20 @@ def model_delete():
     if request.method == 'POST':
         model_number = request.form['model_number'].strip()
 
-        # START-STUDENT-CODE
         # 1. Connect to DB
-        # 2. Delete the model if it exists
-        # 3. Close connection
+        cnxn = pyodbc.connect(DSN)
+        cursor = cnxn.cursor()
 
-        # END-STUDENT-CODE
+        # 2. Delete the model if it exists
+        cursor.execute("SELECT * FROM airplane WHERE model_number = ?", (model_number,))
+        in_use = cursor.fetchone()
+
+        if not in_use:
+            cursor.execute("DELETE FROM airplane_model WHERE model_number = ?", (model_number,))
+            cnxn.commit()
+
+        # 3. Close connection
+        cnxn.close()
 
     return render_template('models.html', models=get_airplane_models(), action="Delete")
 
