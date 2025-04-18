@@ -279,29 +279,46 @@ def employee_delete():
 @app.route('/expertise', methods=['GET', 'POST'])
 @login_required
 def expertise():
-    # START-STUDENT-CODE
-    # 1. Connect to DB
-    # 2. If POST, add or remove expertise from 'expert' table
-    # 3. Retrieve technicians + models for dropdowns
-    # 4. Close connection
 
     if request.method == 'POST':
-        ssn = request.form['ssn'].strip()
-        model_number = request.form['model_number'].strip()
-        action = request.form['action']
+        ssn = request.form.get('ssn','').strip()
+    model_number = request.form.get('model_number', '').strip()
+    action = request.form.get('action','').strip()
 
-        if action == "add":
-            ...
-        elif action == "remove":
-            ...
+    # 1. Connect to DB
+    cnxn = pyodbc.connect(DSN)
+    cursor = cnxn.cursor()
 
-    technicians = []
+    # 2. If POST, add or remove expertise from 'expert' table
+    if action == "add":
+        cursor.execute("INSERT INTO expert (ssn, model_number) VALUES (?, ?)", (ssn, model_number))
+    elif action == "remove":
+        cursor.execute("DELETE FROM expert WHERE ssn = ? AND model_number = ?", (ssn, model_number))
+
+    cnxn.commit()
+    cnxn.close()
+
+    # Get technicians and models for dropdowns
+    cnxn = pyodbc.connect(DSN)
+    cursor = cnxn.cursor()
+
+    cursor.execute('''
+        SELECT t.ssn, e.name, m.model_number
+        FROM technician t
+        JOIN employee e ON t.ssn = e.ssn
+        LEFT JOIN expert m ON t.ssn = m.ssn
+    ''')
+    technicians = cursor.fetchall()
+
+    cursor.execute("SELECT model_number FROM airplane_model")
+    models = cursor.fetchall()
+
+    # 4. Close connection
+    cnxn.close()
 
     formatted_technicians = [
-        (tech[0], tech[1], tech[2] if tech[2] is not None else '') for tech in technicians
+        (tech[0], tech[1], tech[2] if tech[2] else '') for tech in technicians
     ]
-
-    models = []
 
     # END-STUDENT-CODE
 
