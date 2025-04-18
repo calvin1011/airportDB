@@ -254,13 +254,22 @@ def employee_delete():
     if request.method == 'POST':
         ssn = request.form['ssn'].strip()
 
-        # START-STUDENT-CODE
         # 1. Connect to DB
-        # 2. Delete the employee's specializations
-        # 3. Delete from employee
-        # 4. Close connection
+        cnxn = pyodbc.connect(DSN)
+        cursor = cnxn.cursor()
 
-        # END-STUDENT-CODE
+        # 2. Delete the employee's specializations
+        cursor.execute("DELETE FROM manager WHERE ssn = ?", (ssn,))
+        cursor.execute("DELETE FROM technician WHERE ssn = ?", (ssn,))
+        cursor.execute("DELETE FROM atc WHERE ssn = ?", (ssn,))
+        cursor.execute("DELETE FROM expert WHERE ssn = ?", (ssn,))
+
+        # 3. Delete from employee
+        cursor.execute("DELETE FROM employee WHERE ssn = ?", (ssn,))
+        cnxn.commit()
+
+        # 4. Close connection
+        cnxn.close()
 
         return redirect(url_for('employee_delete'))
 
