@@ -45,14 +45,25 @@ def parse_int(value):
 
 
 def get_employees():
-    # START-STUDENT-CODE
-    # 1. Connect to the database using pyodbc and DSN.
-    # 2. Retrieve employees with their roles (Manager, Technician, ATC) or blank.
-    # 3. Close the connection and return the result.
+    cnxn = pyodbc.connect(DSN)
+    cursor = cnxn.cursor()
 
-    employees = []
+    cursor.execute("""
+                   SELECT e.ssn, e.name, e.address, e.phone, e.salary,
+                          CASE
+                              WHEN m.ssn IS NOT NULL THEN 'Manager'
+                              WHEN t.ssn IS NOT NULL THEN 'Technician'
+                              WHEN a.ssn IS NOT NULL THEN 'ATC'
+                              ELSE ''
+                              END AS role
+                   FROM employee e
+                            LEFT JOIN manager m ON e.ssn = m.ssn
+                            LEFT JOIN technician t ON e.ssn = t.ssn
+                            LEFT JOIN atc a ON e.ssn = a.ssn
+                   """)
 
-    # END-STUDENT-CODE
+    employees = cursor.fetchall()
+    cnxn.close()
     return employees
 
 
@@ -105,8 +116,6 @@ def get_airworthiness_tests():
 
     cnxn.close()
     return tests
-
-
 
 @app.route('/')
 @login_required
