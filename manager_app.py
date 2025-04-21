@@ -540,21 +540,29 @@ def faa_test_add():
 @app.route('/faa_tests/update', methods=['GET', 'POST'])
 @login_required
 def faa_test_update():
-    # START-STUDENT-CODE
-    # 1. Connect to DB
-    # 2. If test_number exists, update name/max_score
-    # 3. Close connection
-
     if request.method == 'POST':
-        test_number = request.form['test_number'].strip()
-        name = request.form['name'].strip() or None
-        max_score = request.form['max_score'].strip() or None
+        test_number = request.form.get('test_number', '').strip()
+        name = request.form.get('name', '').strip() or None
+        max_score = request.form.get('max_score', '').strip() or None
         max_score = parse_float(max_score) if max_score else None
 
-    # END-STUDENT-CODE
+        cnxn = pyodbc.connect(DSN)
+        cursor = cnxn.cursor()
+
+        # Check if test exists
+        cursor.execute("SELECT * FROM faa_test WHERE test_number = ?", (test_number,))
+        existing = cursor.fetchone()
+
+        if existing:
+            if name:
+                cursor.execute("UPDATE faa_test SET name = ? WHERE test_number = ?", (name, test_number))
+            if max_score is not None:
+                cursor.execute("UPDATE faa_test SET max_score = ? WHERE test_number = ?", (max_score, test_number))
+            cnxn.commit()
+
+        cnxn.close()
 
     return render_template('faa_tests.html', faa_tests=get_faa_tests(), action="Update")
-
 
 @app.route('/faa_tests/delete', methods=['GET', 'POST'])
 @login_required
