@@ -67,16 +67,17 @@ def get_airplane_models():
     return models
 
 def get_airplanes():
-    # START-STUDENT-CODE
-    # 1. Connect to the database
-    # 2. Retrieve all airplanes (reg_number, model_number)
-    # 3. Close the connection
+    #connect to DB
+    cnxn = pyodbc.connect(DSN)
+    cursor = cnxn.cursor()
 
-    airplanes = []
+    # return all airplanes
+    cursor.execute("SELECT reg_number, model_number FROM airplane")
+    airplanes = cursor.fetchall()
 
-    # END-STUDENT-CODE
+    #close connection
+    cnxn.close()
     return airplanes
-
 
 def get_faa_tests():
     # START-STUDENT-CODE
@@ -486,13 +487,27 @@ def airplane_update():
 @app.route('/airplanes/delete', methods=['GET', 'POST'])
 @login_required
 def airplane_delete():
-    # START-STUDENT-CODE
+
     # 1. Connect to DB
     # 2. If airplane exists, delete it
     # 3. Close connection
 
     if request.method == 'POST':
         reg_number = request.form['reg_number'].strip()
+
+        # connect to DB
+        cnxn = pydoc.connect(DSN)
+        cursor = cnxn.cursor()
+
+        # check if airplane exists
+        cursor.execute("SELECT * FROM airplane WHERE reg_number = ?", (reg_number,))
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute("DELETE FROM airplane WHERE reg_number = ?", (reg_number,))
+            cnxn.commit()
+
+        cnxn.close()
 
     # END-STUDENT-CODE
 
