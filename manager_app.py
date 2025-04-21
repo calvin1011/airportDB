@@ -359,9 +359,8 @@ def update_salaries():
 
             cursor.execute("""
                            UPDATE employee
-                           SET salary = CAST(salary AS FLOAT) * (1 + ?)
+                           SET salary = salary * (1 + CAST(? AS NUMERIC))
                            """, (percentage,))
-
             cnxn.commit()
             cnxn.close()
 
