@@ -567,15 +567,21 @@ def faa_test_update():
 @app.route('/faa_tests/delete', methods=['GET', 'POST'])
 @login_required
 def faa_test_delete():
-    # START-STUDENT-CODE
-    # 1. Connect to DB
-    # 2. If test_number exists, delete from faa_test
-    # 3. Close connection
-
     if request.method == 'POST':
-        test_number = request.form['test_number'].strip()
+        test_number = request.form.get('test_number', '').strip()
 
-    # END-STUDENT-CODE
+        cnxn = pyodbc.connect(DSN)
+        cursor = cnxn.cursor()
+
+        # Check if test exists
+        cursor.execute("SELECT * FROM faa_test WHERE test_number = ?", (test_number,))
+        existing = cursor.fetchone()
+
+        if existing:
+            cursor.execute("DELETE FROM faa_test WHERE test_number = ?", (test_number,))
+            cnxn.commit()
+
+        cnxn.close()
 
     return render_template('faa_tests.html', faa_tests=get_faa_tests(), action="Delete")
 
