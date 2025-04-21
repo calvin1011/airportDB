@@ -346,12 +346,16 @@ def update_salaries():
         if percentage is not None:
             percentage = round(percentage, 2) / 100
 
-            # START-STUDENT-CODE
-            # 1. Connect to DB
-            # 2. Increase salary by 'percentage' for all employees
-            # 3. Close connection
+            cnxn = pyodbc.connect(DSN)
+            cursor = cnxn.cursor()
 
-            # END-STUDENT-CODE
+            cursor.execute("""
+                           UPDATE employee
+                           SET salary = salary * (1 + ?)
+                           """, (percentage,))
+
+            cnxn.commit()
+            cnxn.close()
 
         return redirect(url_for('index'))
 
