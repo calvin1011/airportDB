@@ -177,28 +177,34 @@ def employee_add():
         salary = parse_float(salary)
         password_hashed = hash_password(password) if password else None
 
-        # 1. Connect to DB
         cnxn = pyodbc.connect(DSN)
         cursor = cnxn.cursor()
 
-        # 2. Check if this SSN already exists
+        # Check if this SSN already exists
         cursor.execute("SELECT 1 FROM employee WHERE ssn = ?", (ssn,))
         exists = cursor.fetchone()
 
-        # 3. If not, insert into employee and handle specialization
         if not exists:
+            # Insert into employee table
             cursor.execute('''
-                INSERT INTO employee (ssn, name, password, address, phone, salary)
-                VALUES (?, ?, ?, ?, ?, ?)
-            ''', (ssn, name, password_hashed, address, phone, salary))
+                           INSERT INTO employee (ssn, name, password, address, phone, salary)
+                           VALUES (?, ?, ?, ?, ?, ?)
+                           ''', (ssn, name, password_hashed, address, phone, salary))
 
-        # 4. Close connection
+            # Also insert into specialization table
+            if specialization == 'Manager':
+                cursor.execute("INSERT INTO manager (ssn) VALUES (?)", (ssn,))
+            elif specialization == 'Technician':
+                cursor.execute("INSERT INTO technician (ssn) VALUES (?)", (ssn,))
+            elif specialization == 'ATC':
+                cursor.execute("INSERT INTO atc (ssn) VALUES (?)", (ssn,))
+
         cnxn.commit()
         cnxn.close()
 
-
         return redirect(url_for('employee_add'))
 
+    employees = get_employees()
     return render_template('employees.html', employees=employees, action='Add')
 
 
@@ -295,21 +301,23 @@ def expertise():
 
     if request.method == 'POST':
         ssn = request.form.get('ssn','').strip()
-    model_number = request.form.get('model_number', '').strip()
-    action = request.form.get('action','').strip()
+        model_number = request.form.get('model_number', '').strip()
+        action = request.form.get('action','').strip()
 
-    # 1. Connect to DB
-    cnxn = pyodbc.connect(DSN)
-    cursor = cnxn.cursor()
+        # 1. Connect to DB
+        cnxn = pyodbc.connect(DSN)
+        cursor = cnxn.cursor()
 
-    # 2. If POST, add or remove expertise from 'expert' table
-    if action == "add":
-        cursor.execute("INSERT INTO expert (ssn, model_number) VALUES (?, ?)", (ssn, model_number))
-    elif action == "remove":
-        cursor.execute("DELETE FROM expert WHERE ssn = ? AND model_number = ?", (ssn, model_number))
+        # 2. If POST, add or remove expertise from 'expert' table
+        if action == "add":
+            cursor.execute("SELECT 1 FROM expert WHERE ssn = ? AND model_number = ?", (ssn, model_number))
+            if not cursor.fetchone():
+                cursor.execute("INSERT INTO expert (ssn, model_number) VALUES (?, ?)", (ssn, model_number))
+        elif action == "remove":
+            cursor.execute("DELETE FROM expert WHERE ssn = ? AND model_number = ?", (ssn, model_number))
 
-    cnxn.commit()
-    cnxn.close()
+        cnxn.commit()
+        cnxn.close()
 
     # Get technicians and models for dropdowns
     cnxn = pyodbc.connect(DSN)
@@ -351,7 +359,7 @@ def update_salaries():
 
             cursor.execute("""
                            UPDATE employee
-                           SET salary = salary * (1 + ?)
+                           SET salary = CAST(salary AS FLOAT) * (1 + ?)
                            """, (percentage,))
 
             cnxn.commit()
