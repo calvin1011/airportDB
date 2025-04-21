@@ -454,22 +454,29 @@ def airplane_add():
 @app.route('/airplanes/update', methods=['GET', 'POST'])
 @login_required
 def airplane_update():
-    # START-STUDENT-CODE
-    # 1. Connect to DB
-    # 2. (POST) If airplane exists, update the model_number
-    # 3. Retrieve list of airplane_model for dropdown
-    # 4. Close connection
-
     if request.method == 'POST':
-        reg_number = request.form['reg_number'].strip()
-        model_number = request.form['model_number'].strip()
+        reg_number = request.form.get('reg_number', '').strip()
+        model_number = request.form.get('model_number', '').strip()
 
-    models = []
+        cnxn = pyodbc.connect(DSN)
+        cursor = cnxn.cursor()
 
-    # END-STUDENT-CODE
+        # Check if the airplane exists
+        cursor.execute("SELECT * FROM airplane WHERE reg_number = ?", (reg_number,))
+        existing = cursor.fetchone()
 
+        if existing:
+            # Update the model number
+            cursor.execute(
+                "UPDATE airplane SET model_number = ? WHERE reg_number = ?",
+                (model_number, reg_number)
+            )
+            cnxn.commit()
+
+        cnxn.close()
+
+    models = get_airplane_models()
     return render_template('airplanes.html', airplanes=get_airplanes(), models=models, action="Update")
-
 
 @app.route('/airplanes/delete', methods=['GET', 'POST'])
 @login_required
