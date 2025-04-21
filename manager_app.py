@@ -80,12 +80,15 @@ def get_airplanes():
     return airplanes
 
 def get_faa_tests():
+    #connect to DB
     cnxn = pyodbc.connect(DSN)
     cursor = cnxn.cursor()
 
+    # retrieve all FAA tests
     cursor.execute("SELECT test_number, name, max_score FROM faa_test")
     faa_tests = cursor.fetchall()
 
+    #close connection
     cnxn.close()
     return faa_tests
 
@@ -511,20 +514,28 @@ def airplane_delete():
 @app.route('/faa_tests/add', methods=['GET', 'POST'])
 @login_required
 def faa_test_add():
-    # START-STUDENT-CODE
-    # 1. Connect to DB
-    # 2. If test_number doesn't exist, insert new FAA test
-    # 3. Close connection
-
     if request.method == 'POST':
-        test_number = request.form['test_number'].strip()
-        name = request.form['name'].strip()
-        max_score = parse_float(request.form['max_score'].strip())
+        test_number = request.form.get('test_number', '').strip()
+        name = request.form.get('name', '').strip()
+        max_score = parse_float(request.form.get('max_score', '').strip())
 
-    # END-STUDENT-CODE
+        cnxn = pyodbc.connect(DSN)
+        cursor = cnxn.cursor()
+
+        # Check if the test already exists
+        cursor.execute("SELECT * FROM faa_test WHERE test_number = ?", (test_number,))
+        existing = cursor.fetchone()
+
+        if not existing:
+            cursor.execute(
+                "INSERT INTO faa_test (test_number, name, max_score) VALUES (?, ?, ?)",
+                (test_number, name, max_score)
+            )
+            cnxn.commit()
+
+        cnxn.close()
 
     return render_template('faa_tests.html', faa_tests=get_faa_tests(), action="Add")
-
 
 @app.route('/faa_tests/update', methods=['GET', 'POST'])
 @login_required
