@@ -80,16 +80,14 @@ def get_airplanes():
     return airplanes
 
 def get_faa_tests():
-    # START-STUDENT-CODE
-    # 1. Connect to the database
-    # 2. Retrieve all FAA tests (test_number, name, max_score)
-    # 3. Close the connection
+    cnxn = pyodbc.connect(DSN)
+    cursor = cnxn.cursor()
 
-    faa_tests = []
+    cursor.execute("SELECT test_number, name, max_score FROM faa_test")
+    faa_tests = cursor.fetchall()
 
-    # END-STUDENT-CODE
+    cnxn.close()
     return faa_tests
-
 
 def get_airworthiness_tests():
     # START-STUDENT-CODE
@@ -487,10 +485,6 @@ def airplane_update():
 @app.route('/airplanes/delete', methods=['GET', 'POST'])
 @login_required
 def airplane_delete():
-
-    # 1. Connect to DB
-    # 2. If airplane exists, delete it
-    # 3. Close connection
 
     if request.method == 'POST':
         reg_number = request.form['reg_number'].strip()
