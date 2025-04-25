@@ -7,9 +7,9 @@ import java.security.MessageDigest;
 public class AirplaneTestApp {
     // START-STUDENT-CODE
     // Set the database connection URL and credentials
-    private static final String DB_URL = "";
-    private static final String DB_USER = "";
-    private static final String DB_PASSWORD = "";
+    private static final String DB_URL = "jdbc:postgresql://localhost:6543/C837785579";
+    private static final String DB_USER = "C837785579";
+    private static final String DB_PASSWORD = "837785579";
     // END-STUDENT-CODE
 
     private JFrame loginFrame, testEventFrame;
@@ -127,10 +127,7 @@ public class AirplaneTestApp {
         airplaneDropdown = new JComboBox<>();
         airplaneDropdown.setFont(airplaneDropdown.getFont().deriveFont(18f));
 
-        // START-STUDENT-CODE
-        // Write the query used to populate airplaneDropdown with the
-        // registration numbers from the "airplane" table.
-        populateDropdown(airplaneDropdown, "");
+        populateDropdown(airplaneDropdown, "SELECT reg_number FROM airplane");
         // END-STUDENT-CODE
 
         row1.add(airplaneDropdown);
@@ -142,10 +139,7 @@ public class AirplaneTestApp {
         testDropdown = new JComboBox<>();
         testDropdown.setFont(testDropdown.getFont().deriveFont(18f));
 
-        // START-STUDENT-CODE
-        // Write the query to populate testDropdown with the test_number from
-        // "faa_test" table.
-        populateDropdown(testDropdown, "");
+        populateDropdown(testDropdown, "SELECT test_number FROM faa_test");
         // END-STUDENT-CODE
 
         row2.add(testDropdown);
@@ -224,16 +218,13 @@ public class AirplaneTestApp {
             int secs = Integer.parseInt(s);
             int score = Integer.parseInt(scoreTxt);
 
-            // START-STUDENT-CODE
-            // Build the logic to insert a new test event into the "test_event"
-            // table.
-            String sql = "";
-            // END-STUDENT-CODE
+            String sql = "INSERT INTO test_event (test_number, ssn, reg_number, date, duration, score) " +
+                    "VALUES (?, ?, ?, CURRENT_DATE, make_interval(hours => ?, mins => ?, secs => ?), ?)";
 
             try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASSWORD);
-                    PreparedStatement stmt = conn.prepareStatement(sql)) {
+                 PreparedStatement stmt = conn.prepareStatement(sql)) {
                 stmt.setInt(1, testNum);
-                stmt.setInt(2, loggedInTechnicianId);
+                stmt.setString(2, String.valueOf(loggedInTechnicianId));  // ssn is a string
                 stmt.setString(3, airplane);
                 stmt.setInt(4, hours);
                 stmt.setInt(5, mins);
