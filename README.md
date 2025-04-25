@@ -90,7 +90,7 @@ Testing
 
 Authors & Acknowledgments
 
-    Developed by: [Your Name]
+    Developed by: Calvin Ssendawula
 
     Guided by: CSU Department of Computer Science
 
